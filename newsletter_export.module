@@ -1,0 +1,146 @@
+<?php
+
+define('NODE_BUILD_NEWSLETTER_EXPORT', 6);
+
+/**
+ * Implements hook_perm
+ */
+function newsletter_export_perm() {
+  return array('export newsletter content');
+}
+
+/**
+ * Implements hook_menu
+ */
+function newsletter_export_menu() {
+
+  $items['admin/settings/newsletter_export'] = array(
+    'title' => t('Newsletter export'),
+    'description' => t('Change how newsletter export behaves'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('newsletter_export_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['newsletter_export/%node'] = array(
+    'page callback' => 'newsletter_export_node',
+    'page arguments' => array(1),
+    'access arguments' => array('export newsletter content'),
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+}
+
+function newsletter_export_admin_settings() {
+  // Get an array of node types with internal names as keys and
+  // "friendly names" as values. E.g.,
+  // array('page' => 'Page', 'story' => 'Story')
+  $options = node_get_types('names');
+  
+  $form['newsletter_export_node_types'] = array( 
+    '#type' => 'radios', 
+    '#title' => t('Users may export these content types'), 
+    '#options' => $options, 
+    '#default_value' => variable_get('newsletter_export_node_types', array('page')), 
+    '#description' => t('Nodes of these types will provide links for exporting to html'), 
+  );
+  
+  $form['newsletter_export_filename'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Filename'),
+    '#required' => TRUE,
+    '#description' => t('Enter the name of html used for export, a date will be appended to the end. If no name is entered a default name of "newsletter_export" will be used'),
+    '#default_value' => variable_get('newsletter_export_filename', 'newsletter_export'),
+  );
+
+  return system_settings_form($form); 
+
+}
+
+function newsletter_export_link($type, $object, $teaser = FALSE) {
+
+  $links = array();
+
+  if ($type == 'node' && $object->type == variable_get('newsletter_export_node_types', '') && user_access('export newsletter content')) {    
+    $links['newsletter_export'] = array(
+      'title' => t('Newsletter Export'), 
+      'href' => 'newsletter_export/' . $object->nid, 
+      'attributes' => array('title' => t('Export this node for newsletter')),
+    );
+  }
+  
+  return $links;
+}
+
+function newsletter_export_theme() {
+  return array(
+    'newsletter_export' => array(
+      'arguments' => array('raw_markup' => NULL, 'fields' => NULL, 'node' => NULL),
+      'template' => 'newsletter-export',
+    ),
+  );
+}
+
+function newsletter_export_node($item) {
+
+  $item->build_mode = NODE_BUILD_NEWSLETTER_EXPORT;
+  $item->link = url("node/$nid", array('absolute' => TRUE));
+
+  $teaser =  FALSE;
+
+  // Filter and prepare node teaser
+  if (node_hook($item, 'view')) {
+    $item = node_invoke($item, 'view', $teaser, FALSE);
+  }
+  else {
+    $item = node_prepare($item, $teaser);
+  }
+
+  // Allow modules to change $node->content before the node is rendered.
+  node_invoke_nodeapi($item, 'view', $teaser, FALSE);
+
+  // Set the proper node property, then unset unused $node property so that a
+  // bad theme can not open a security hole.
+    
+  $raw_markup = drupal_render($item->content);
+  
+  $type = content_types($item->type);
+    
+  $fields = array();
+  
+  foreach ($type['fields'] as $fieldname => $vars) {
+    $fields[$fieldname] = $item->$fieldname;
+  }
+  
+  $fields['body'] = $item->body;
+  $fields['title'] = $item->title;
+  
+  $output = theme('newsletter_export', $raw_markup, $fields, $item);
+
+  drupal_set_header("Pragma: public");
+  drupal_set_header("Cache-Control: max-age=0");
+  drupal_set_header('Content-Type: text/html; charset=utf-8');
+  drupal_set_header('Content-Disposition: attachment; filename="' . variable_get('newsletter_export_filename', 'newsletter_export') . date(' m-d-Y',time()) . '.html"');
+
+  print $output;
+}
+
+/**
+ * Implements hook_content_build_modes
+ */
+function newsletter_export_content_build_modes() {
+  return array(
+    'newsletter' => array(
+      'title' => t('Newsletter'), 
+      'build modes' => array(
+        NODE_BUILD_NEWSLETTER_EXPORT => array(
+          'title' => t('Newsletter'), 
+          'views style' => FALSE,
+        ),
+      ),
+    ), 
+  );
+}
+

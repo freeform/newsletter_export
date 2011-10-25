@@ -1,0 +1,13 @@
+Newsletter Export is a Drupal module which allows a specific node type
+to be exported as raw HTML. This is excellent for building a node type
+to use as a newsletter. A template file is provided to allow you to completely
+customize the output of your fields.
+
+Template File: 
+newsletter-export.tpl.php
+
+provides three variables
+
+$raw_markup -> The raw markup that drupal would provide for your node
+$fields -> An array of all the fields and their values
+$node -> The entire node object
