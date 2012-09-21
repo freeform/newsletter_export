@@ -28,7 +28,7 @@ function newsletter_export_entity_info_alter(&$info) {
  */
 function newsletter_export_menu() {
 
-  $items['admin/config/settings/newsletter_export'] = array(
+  $items['admin/config/media/newsletter_export'] = array(
     'title' => 'Newsletter export',
     'description' => 'Change how newsletter export behaves',
     'page callback' => 'drupal_get_form',
