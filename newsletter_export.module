@@ -148,7 +148,7 @@ function newsletter_export_node($item) {
   }
   
   $output = theme(array('newsletter_export__' . $node->type, 'newsletter_export'), 
-      array('raw_markup' => $raw_markup, 'fields' => $fields, 'node' => $item));
+      array('raw_markup' => $raw_markup, 'fields' => $fields, 'node' => $node));
   $download = variable_get('newsletter_export_is_download', 1);
   if ($download) {
     drupal_add_http_header("Pragma",  "public");
