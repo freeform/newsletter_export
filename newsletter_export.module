@@ -88,12 +88,8 @@ function newsletter_export_admin_settings() {
 function newsletter_export_node_view($node, $view_mode, $langcode) {
   $allowed_types = variable_get('newsletter_export_node_types', array());
   //TODO: Should we unset the links if requested in export mode?
-  if ( 
-    !empty($allowed_types) && 
-    ($allowed_types[$node->type] !== 0) && 
-    $view_mode != 'newsletter_export' &&
-    user_access('export newsletter content')
-    ) {
+  if ( array_key_exists($node->type, $allowed_types) && ($allowed_types[$node->type] !== 0) && 
+    $view_mode != 'newsletter_export' && user_access('export newsletter content')) {
     $links['newsletter_export'] = array(
       // Unrelated to the change where links are added, Drupal 7 also adds a
       // format_username() function.
