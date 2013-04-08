@@ -73,8 +73,8 @@ function newsletter_export_admin_settings() {
   
   $form['newsletter_export_is_download'] = array(
     '#type' => 'radios',
-    '#title' => t('Newsletter download on'),
-    '#options' => array(0 => t('No'), 1 =>  t('Yes')),
+    '#title' => t('Newsletter export mode'),
+    '#options' => array(0 => t('Inline'), 1 =>  t('Download')),
     '#required' => TRUE,
     '#description' => t('Should the newsletter be shown inline or start a download?'),
     '#default_value' => variable_get('newsletter_export_is_download', 1),
@@ -159,5 +159,3 @@ function newsletter_export_node($item) {
     return $output;
   }
 }
-
-
