@@ -1,13 +1,9 @@
-Newsletter Export is a Drupal module which allows a specific node type to be exported as raw HTML. This is excellent for
-building a node type to use as a newsletter. A template file is provided to allow you to completely customize the output
-of your fields.
-
-A new field display "newsletter" is also created so you can create unique markup just for the newsletter export.
+Newsletter Export is a Drupal module which allows a specific content type to be exported as raw HTML. This is excellent for building a content type to use as a newsletter for a mass email program such as CiviCRM or MailChimp. A template file is provided to allow you to completely customize the output of your fields. As well, a new view display "newsletter" is also created so you can create unique markup just for the newsletter export. When exporting only the HTML of the content type will be included and not the entire site.
 
 Template File: 
 newsletter-export.tpl.php
 
-provides three variables
+The template provides three variables:
 
 $raw_markup -> The raw markup that drupal would provide for your node
 $fields -> An array of all the fields and their values
@@ -15,16 +11,18 @@ $node -> The entire node object
 
 By default it uses $raw_markup.
 
+Steps:
+1. Navigate to http://example.com/admin/config/media/newsletter_export to choose which content types will have an export button.
+2. Choose to show HTML inline for testing or save HTML snippet for download.
+3. Go to the content type to configure the newsletter view mode.
+
 Tips:
 
 Use References or Entity References module to collect other content/articles into the export.
 
 Move newsletter-export.tpl.php to your theme folder to edit. You can wrap the output with your html.
 
-Email clients are notorious for ignoring css. This includes major clients like Gmail. One approach is to use a 
-third-party to turn your html file with css to inline styles that will look good in most email clients. 
-E.g. http://premailer.dialect.ca/, http://inlinestyler.torchboxapps.com/. You'll have to upload your file to the site 
-to have it converted.
+Email clients are notorious for ignoring css. This includes major clients like Gmail. One approach is to use a third-party to turn your html file with css to inline styles that will look good in most email clients. E.g. http://premailer.dialect.ca/, http://inlinestyler.torchboxapps.com/. You'll have to upload your file to the site to have it converted.
 
 Or call a script like https://github.com/tijsverkoyen/CssToInlineStyles to transform it before downloading.
 
