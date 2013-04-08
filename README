@@ -1,4 +1,6 @@
-Newsletter Export is a Drupal module which allows a specific content type to be exported as raw HTML. This is excellent for building a content type to use as a newsletter for a mass email program such as CiviCRM or MailChimp. A template file is provided to allow you to completely customize the output of your fields. As well, a new view display "newsletter" is also created so you can create unique markup just for the newsletter export. When exporting only the HTML of the content type will be included and not the entire site.
+Newsletter Export is a Drupal module which allows a specific content type to be exported as raw HTML. This is excellent for building a content type to use as a newsletter for a mass email program such as CiviCRM or MailChimp. When exporting only the HTML of the content type will be included and not the entire site.
+
+A template file is provided to allow you to completely customize the output of your fields. As well, a new view display "newsletter" is also created so you can create unique markup just for the newsletter export. A typical usage is to create a newsletter content type and use entity references to include regular website content such as articles, events and blog posts. Each of these can have their layout customized by changing the newsletter view mode for each content type.
 
 Template File: 
 newsletter-export.tpl.php
@@ -15,10 +17,14 @@ Steps:
 1. Navigate to http://example.com/admin/config/media/newsletter_export to choose which content types will have an export button.
 2. Choose to show HTML inline for testing or save HTML snippet for download.
 3. Go to the content type to configure the newsletter view mode.
+4. Create one or more reference fields (use Entity Reference - https://drupal.org/project/entityreference - or References - https://drupal.org/project/references) for referencing other content. 
+5. Add other fields to show header, intro, footer to the newsletter content type.
+4. Go to each content type that is referenced, add fields such as images, and configure their newsletter view mode.
+5. Test the downloaded or inline HTML by clicking "newsletter export" at the bottom of the newsletter node when viewing it.
+6. Improve the layout by customizing the view modes or the template file. Test and repeat.
+7. Once the newsletter layout looks close import into a mass mailing email application to test the newsletter in all the main email clients.
 
 Tips:
-
-Use References or Entity References module to collect other content/articles into the export.
 
 Move newsletter-export.tpl.php to your theme folder to edit. You can wrap the output with your html.
 
