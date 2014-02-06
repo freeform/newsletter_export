@@ -1,38 +1,73 @@
-Newsletter Export is a Drupal module which allows a specific content type to be exported as raw HTML. This is excellent for building a content type to use as a newsletter for a mass email program such as CiviCRM or MailChimp. When exporting only the HTML of the content type will be included and not the entire site.
+Newsletter Export is a Drupal module which allows one or more specific node
+type to be exported as raw HTML. This is excellent for building a node type
+to use as a newsletter. We generally use the References or Entity References
+module to collect other content/articles into the export. The general
+approach and how to set up your content type is explained here:
+http://www.freeform.ca/en/blog/updated-recipe-building-newsletters-drupal-7
 
-A template file is provided to allow you to completely customize the output of your fields. As well, a new view display "newsletter" is also created so you can create unique markup just for the newsletter export. A typical usage is to create a newsletter content type and use entity references to include regular website content such as articles, events and blog posts. Each of these can have their layout customized by changing the newsletter view mode for each content type.
+Visit admin/config/media/newsletter_export to choose the content types.
+A new display mode "newsletter" is then available on those content types
+so you can create a unique field arrangement and markup just for the
+newsletter export.
 
-Template File: 
+Templates:
+-------------------------------------------------------------------------------
+The template file or files allow you to customize the output of your fields.
+Move or copy newsletter-export.tpl.php to your theme folder to edit.
+
+1) Template File (By default applies to all active newsletter content types): 
 newsletter-export.tpl.php
 
-The template provides three variables:
+2) Copy Template File (for a particular content type): 
+newsletter-export--my_node_type.tpl.php
+EG. newsletter-export--newsletter.tpl.php
 
-$raw_markup -> The raw markup that drupal would provide for your node
-$fields -> An array of all the fields and their values
-$node -> The entire node object
+The template provides three variables
 
-By default it uses $raw_markup.
+$raw_markup -> The raw markup that drupal would provide for your node,
+               outputs everything with one easy print statement.
+$fields     -> An array of all the fields and their values
+$node       -> The entire node object
 
-Steps:
-1. Navigate to http://example.com/admin/config/media/newsletter_export to choose which content types will have an export button.
-2. Choose to show HTML inline for testing or save HTML snippet for download.
-3. Go to the content type to configure the newsletter view mode.
-4. Create one or more reference fields (use Entity Reference - https://drupal.org/project/entityreference - or References - https://drupal.org/project/references) for referencing other content. 
-5. Add other fields to show header, intro, footer to the newsletter content type.
-4. Go to each content type that is referenced, add fields such as images, and configure their newsletter view mode.
-5. Test the downloaded or inline HTML by clicking "newsletter export" at the bottom of the newsletter node when viewing it.
-6. Improve the layout by customizing the view modes or the template file. Test and repeat.
-7. Once the newsletter layout looks close import into a mass mailing email application to test the newsletter in all the main email clients.
+The default template uses $raw_markup. One example of how to use the individual
+fields wrapped with html and inlined css is shown below and with more detail on:
+https://drupal.org/node/2045961
 
-Tips:
+<html>
+<head></head>
+<body>
+<h1 style="font-size: 16px; font-weight: bold; color: navy; margin-bottom: 10px;"><?php print $fields['title']; ?></h1>
 
-Move newsletter-export.tpl.php to your theme folder to edit. You can wrap the output with your html.
+<div style="font-size 10px;"><?php print $fields['body']['und'][0]['safe_value']; ?></div>
+<hr/>
+<?php foreach ($fields['field_news_latest_pages']['und'] as $delta => $news_item): ?>
+    <?php $ent = $news_item['entity']; ?>
+    <div style="font-size 10px; border-bottom: 1px dotted #808080;">
+        <?php print $ent->body['und'][0]['safe_value']; ?>
+    </div>
+<?php endforeach; ?>
+</body>
+</html>
 
-Email clients are notorious for ignoring css. This includes major clients like Gmail. One approach is to use a third-party to turn your html file with css to inline styles that will look good in most email clients. E.g. http://premailer.dialect.ca/, http://inlinestyler.torchboxapps.com/. You'll have to upload your file to the site to have it converted.
+Note though that currently, relative URLs in content are only changed to absolute URLs in
+$raw_markup. So if you want to use $fields or $node, you may have to add some code to 
+your template to address this issue.
 
-Or call a script like https://github.com/tijsverkoyen/CssToInlineStyles to transform it before downloading.
+Automatically inlining the css:
+-------------------------------------------------------------------------------
+Email clients are notorious for ignoring css. This includes major clients like
+Gmail. If you want to use $raw_markup to ouput your content rather than make a 
+custom template it will output woth the ids and classes from your sites template
+but no inline css. You can then use a third-party service to turn your html file
+with css to inline styles that will look good in most email clients. 
+E.g. http://premailer.dialect.ca/, http://inlinestyler.torchboxapps.com/.
+You'll have to upload the exported newsletter file to the site to have it converted.
 
-Upload the script to the newsletter_export module. In top of newsletter-export.tpl.php include the script. E.g.:
+Or call a script like https://github.com/tijsverkoyen/CssToInlineStyles to 
+transform it before downloading.
+
+Upload the script to the newsletter_export module.
+In top of newsletter-export.tpl.php include the script. E.g.:
 
   module_load_include('php', 'newsletter_export', 'CssToInlineStyles/css_to_inline_styles');
 

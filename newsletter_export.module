@@ -48,10 +48,11 @@ function newsletter_export_menu() {
   return $items;
 }
 
+
+// Adds admin settings for module under Admin > Configuration > Media > Newsletter Export
 function newsletter_export_admin_settings() {
-  // Get an array of node types with internal names as keys and
-  // "friendly names" as values. E.g.,
-  // array('page' => 'Page', 'story' => 'Story')
+  // Get an array of node types with internal names as keys and "friendly names" as values,
+  // e.g., array('page' => 'Page', 'story' => 'Story')
   $options = node_type_get_names();
   $form['newsletter_export_node_types'] = array( 
     '#type' => 'checkboxes', 
@@ -73,8 +74,8 @@ function newsletter_export_admin_settings() {
   
   $form['newsletter_export_is_download'] = array(
     '#type' => 'radios',
-    '#title' => t('Newsletter export mode'),
-    '#options' => array(0 => t('Inline'), 1 =>  t('Download')),
+    '#title' => t('Newsletter download on'),
+    '#options' => array(0 => t('No'), 1 =>  t('Yes')),
     '#required' => TRUE,
     '#description' => t('Should the newsletter be shown inline or start a download?'),
     '#default_value' => variable_get('newsletter_export_is_download', 1),
@@ -85,6 +86,8 @@ function newsletter_export_admin_settings() {
 
 }
 
+
+// Adds newsletter export button to page when newsletter node is viewed and user has appropriate permissions
 function newsletter_export_node_view($node, $view_mode, $langcode) {
   $allowed_types = variable_get('newsletter_export_node_types', array());
   //TODO: Should we unset the links if requested in export mode?
@@ -106,6 +109,8 @@ function newsletter_export_node_view($node, $view_mode, $langcode) {
 }
 
 
+// Is this function still being used? It's not referenced anywhere else in the module, 
+// and looks like it might have been replaced by lines 167-169 in newsletter_export_node()
 function newsletter_export_theme() {
   return array(
     'newsletter_export' => array(
@@ -116,6 +121,25 @@ function newsletter_export_theme() {
   );
 }
 
+
+// Changes relative URLs in content to absolute URLs
+// Currently only works on strings, and used on $raw_markup, 
+// but could be modified to apply to $node and $fields if necessary
+function newsletter_export_fix_links($content) {
+
+  $domain = "http://" . $_SERVER['SERVER_NAME'];
+  
+  $fixed_content = str_replace(
+    array('src="/', 'href="/'),
+    array('src="' . $domain . '/', 'href="' . $domain . '/'),
+    $content
+  );
+
+  return $fixed_content;
+}
+
+
+// The final function that generates the actual newsletter output
 function newsletter_export_node($item) {
   $node = node_load($item);
 
@@ -124,27 +148,29 @@ function newsletter_export_node($item) {
   $render_array = node_view_multiple(array($item => $node), 'newsletter_export'); //, $weight = 0, $langcode = NULL)
 
   // TODO: Allow modules to change $node->content before the node is rendered.
-  //node_invoke_nodeapi($item, 'view', $teaser, FALSE);
   $type = 'node';
   drupal_alter(array('node_view', 'entity_view'), $render_array, $type);
 
   // TODO: Set the proper node property, then unset unused $node property so that a
   // bad theme can not open a security hole.
     
-  $raw_markup = render($render_array);
-  
-  //$type = content_types($item->type);
-  $field_info = field_info_instances('node', $node->type);
+  // builds $raw_markup string and fixes relative links
+  $raw_markup = render($render_array);  
+  $raw_markup = newsletter_export_fix_links($raw_markup);
 
+  // builds $fields array
+  $field_info = field_info_instances('node', $node->type);
   $fields = array();
   $fields['title'] = $node->title;
   foreach (array_keys($field_info) as $fieldname) {
-
     $fields[$fieldname] = $node->$fieldname;
   }
   
+  // collects $raw_markup, $fields and $node, to pass to the template file
   $output = theme(array('newsletter_export__' . $node->type, 'newsletter_export'), 
       array('raw_markup' => $raw_markup, 'fields' => $fields, 'node' => $node));
+      
+  // adds the necessary headers to display as separate HTML document if download is checked
   $download = variable_get('newsletter_export_is_download', 1);
   if ($download) {
     drupal_add_http_header("Pragma",  "public");
